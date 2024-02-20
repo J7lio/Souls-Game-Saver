@@ -23,9 +23,10 @@ nombre_partida = "DS30000.sl2"
 # Copia la partida actual con el nombre dado
 def guardarPartida(nompartida):
     try:
-        os.mkdir(carpeta_partidas + "\\" + str(nompartida))
+        os.mkdir(os.path.join(carpeta_partidas, nompartida))
+
         shutil.copy(partida_juego + "\\" + nombre_partida,
-                    carpeta_partidas + "\\" + str(nompartida) + "\\" + nombre_partida)
+                    carpeta_partidas + "\\" + nompartida + "\\" + nombre_partida)
 
         f = open(index, "a")
         f.write(nompartida + "\n")
@@ -35,12 +36,17 @@ def guardarPartida(nompartida):
 
 
 def cargarPartida(numpartida):
-    f = open(index, "r")
+    with open(index, "r") as f:
+        try:
+            car = f.readlines()[numpartida - 1].strip()
+        except IndexError as e:
+            print("El numero de partida no existe.")
+            return
 
-    car = f.readlines()[numpartida - 1][:-1]
-    f.close()
+    partida_n = os.path.join(carpeta_partidas, car, nombre_partida)
+    destino = os.path.join(partida_juego, nombre_partida)
 
-    shutil.copy(carpeta_partidas + "\\" + car + "\\" + nombre_partida, partida_juego + "\\" + nombre_partida)
+    shutil.copy(partida_n, destino)
 
 
 def mostrarCarpetas():
@@ -51,23 +57,72 @@ def mostrarCarpetas():
         i += 1
 
 
+def borrarCarpeta(num):
+    num -= 1
+    res = ""
+    with open(index, "r") as f:
+        fichero = f.readlines()
+        if num >= len(fichero) or num <= -1:
+            raise IndexError("El numero de partida no existe.")
+        for i, line in enumerate(fichero):
+            if i != num:
+                res += line.strip() + "\n"
+            else:
+                carpeta_a_borrar = os.path.join(carpeta_partidas, line.strip())
+                shutil.rmtree(carpeta_a_borrar)
+    with open(index, "w") as f:
+        f.write(res)
+
+
 while 1:
-    print("\n\n0. Mostrar Partidas\n1. Cargar Partida\n2. Guardar Partida\n3. Finalizar")
+    print("\n\n1. Mostrar Partidas\n2. Cargar Partida\n3. Guardar Partida\n4. Borrar Partida\n0. Finalizar")
     op = input()
 
-    if op == "0":
+    if op == "1":
+        print()
         mostrarCarpetas()
-    elif op == "1":
+
+    elif op == "2":
+        print("\nQue partidas quieres cargar.")
         mostrarCarpetas()
         print("Introduce el numero de la partida: ", end="")
-        num = int(input())
+        try:
+            num = int(input())
+        except:
+            print("Introduce un numero correcto.")
+            continue
+
         cargarPartida(num)
-    elif op == "2":
-        print("Introduce el nombre de la partida: ", end="")
-        nom = input()
-        guardarPartida(nom)
+
     elif op == "3":
+        print("Introduce el nombre de la partida: ", end="")
+
+        nom = input()
+        if not nom.isalnum():
+            print("Introduce un nombre valido.")
+            continue
+
+
+        guardarPartida(nom)
+
+    elif op == "4":
+        print("\nQue partidas quieres borrar.")
+        mostrarCarpetas()
+        print("Introduce el numero de la partida: ", end="")
+        try:
+            num = int(input())
+        except:
+            print("Introduce un numero correcto.")
+            continue
+
+        try:
+            borrarCarpeta(num)
+        except IndexError as e:
+            print("Error:", e)
+
+    elif op == "0":
         print("Finalizando programa.")
         exit()
+
     else:
         print("Valor no valido")
