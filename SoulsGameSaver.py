@@ -1,7 +1,11 @@
 import shutil
 import os
+import tkinter as tk
+from tkinter import filedialog
 
 # Definir y crear (si no existen) las carpetas del indice y las partidas guardadas.
+nombre_partida = "DS30000.sl2"
+
 carpeta_documentos = os.path.join(os.getenv('USERPROFILE'), 'Documents')
 
 carpeta_index = os.path.join(carpeta_documentos, 'SoulsGameSaver', "IndexDs3")
@@ -14,13 +18,29 @@ if not os.path.exists(index):
         pass
     os.makedirs(carpeta_partidas)
 
-appdata_path = os.getenv('APPDATA')
-partida_juego = os.path.join(appdata_path, "DarkSoulsIII", "0110000134ba164c")
 
-nombre_partida = "DS30000.sl2"
+def seleccionar_carpeta():
+    root = tk.Tk()
+    root.withdraw()
+
+    appdata_path = os.getenv('APPDATA')
+    directorio_inicial = os.path.join(appdata_path, "DarkSoulsIII")
+
+    carpeta_seleccionada = filedialog.askdirectory(initialdir=directorio_inicial)
+
+    if carpeta_seleccionada:
+        return carpeta_seleccionada
+    else:
+        print("No se seleccionó ninguna carpeta.")
+        exit()
 
 
-# Copia la partida actual con el nombre dado
+input("Pulsa Enter y selecciona la carpeta de los archivos de guardado.")
+partida_juego = seleccionar_carpeta()
+
+
+
+
 def guardarPartida(nompartida):
     try:
         os.mkdir(os.path.join(carpeta_partidas, nompartida))
@@ -28,9 +48,8 @@ def guardarPartida(nompartida):
         shutil.copy(partida_juego + "\\" + nombre_partida,
                     carpeta_partidas + "\\" + nompartida + "\\" + nombre_partida)
 
-        f = open(index, "a")
-        f.write(nompartida + "\n")
-        f.close()
+        with open(index, "a") as f:
+            f.write(nompartida + "\n")
     except:
         print("ERR: La carpeta ya existe o el archivo no se puede crear")
 
@@ -76,25 +95,30 @@ def borrarCarpeta(num):
 
 while 1:
     print("\n\n1. Mostrar Partidas\n2. Cargar Partida\n3. Guardar Partida\n4. Borrar Partida\n0. Finalizar")
-    op = input()
 
-    if op == "1":
+    try:
+        op = int(input())
+    except ValueError as e:
+        print("Caracter no valido.")
+        continue
+
+    if op == 1:
         print()
         mostrarCarpetas()
 
-    elif op == "2":
+    elif op == 2:
         print("\nQue partidas quieres cargar.")
         mostrarCarpetas()
         print("Introduce el numero de la partida: ", end="")
         try:
             num = int(input())
-        except:
-            print("Introduce un numero correcto.")
+        except ValueError as e:
+            print("Introduce un numero.")
             continue
 
         cargarPartida(num)
 
-    elif op == "3":
+    elif op == 3:
         print("Introduce el nombre de la partida: ", end="")
 
         nom = input()
@@ -105,14 +129,14 @@ while 1:
 
         guardarPartida(nom)
 
-    elif op == "4":
+    elif op == 4:
         print("\nQue partidas quieres borrar.")
         mostrarCarpetas()
         print("Introduce el numero de la partida: ", end="")
         try:
             num = int(input())
-        except:
-            print("Introduce un numero correcto.")
+        except ValueError as e:
+            print("Introduce un numero.")
             continue
 
         try:
@@ -120,9 +144,9 @@ while 1:
         except IndexError as e:
             print("Error:", e)
 
-    elif op == "0":
+    elif op == 0:
         print("Finalizando programa.")
         exit()
 
     else:
-        print("Valor no valido")
+        print("Numero incorrecto")
